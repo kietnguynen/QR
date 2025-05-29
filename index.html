@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <title>Chữ 3D Phủ Đầy Màn Hình</title>
+  <style>
+    body {
+      margin: 0;
+      background: #0a0f21; /* nền tối màu xanh đen */
+      height: 100vh;
+      overflow: hidden;
+      font-family: 'Segoe UI', sans-serif;
+      user-select: none;
+      cursor: grab;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .scene {
+      width: 100vw;
+      height: 100vh;
+      perspective: 1200px;
+      overflow: visible;
+      position: relative;
+      will-change: transform;
+    }
+    #heart {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      transform-style: preserve-3d;
+      transition: transform 0.1s ease-out;
+      overflow: visible;
+      will-change: transform;
+    }
+    .falling-text {
+      position: absolute;
+      color: #a0d8f7; /* xanh pastel dịu mắt */
+      font-size: 20px;
+      white-space: nowrap;
+      font-weight: 700;
+      pointer-events: none;
+      user-select: none;
+      transform-style: preserve-3d;
+      text-shadow:
+        0 0 5px #a0d8f7,
+        0 0 10px #7fc9f0,
+        0 0 20px #5ebaf0,
+        0 0 30px #3caaf3,
+        0 0 40px #1a9cf2;
+    }
+    .falling-text:nth-child(even) {
+      color: #c6e7fc;
+      text-shadow:
+        0 0 5px #c6e7fc,
+        0 0 10px #a9d8fb,
+        0 0 20px #8cc8f9;
+    }
+    .heart {
+      position: absolute;
+      color: #ff5a70; /* đỏ hồng dịu nhẹ */
+      font-size: 24px;
+      pointer-events: none;
+      user-select: none;
+      transform-style: preserve-3d;
+      text-shadow:
+        0 0 10px #ff8a9e,
+        0 0 20px #ff5a70,
+        0 0 30px #e03f56;
+      will-change: transform;
+    }
+  </style>
+</head>
+<body>
+
+<div class="scene">
+  <div id="heart"></div>
+</div>
+
+<script>
+  const heart = document.getElementById("heart");
+  const phrases = [
+    "Nhìn cái chó gì", 
+    "Chơi game ko", 
+    "Fb: Nguyễn Annh Kiệt",
+    "0376626344",
+    ":)"
+  ];
+
+  const totalTexts = 40;
+  const totalHearts = 30;
+
+  const fallingItems = [];
+
+  function createFallingText(text) {
+    const el = document.createElement("div");
+    el.className = "falling-text";
+    el.textContent = text;
+
+    el.style.left = Math.random() * 100 + "%";
+    el.style.top = (-Math.random() * 100) + "%";
+
+    const zDepthScale = 800;
+    const z = (Math.random() - 0.5) * 2 * zDepthScale;
+    const rotY = (Math.random() * 60) - 30;
+    const rotX = (Math.random() * 60) - 30;
+    const scale = 1 + Math.random() * 1.2;
+
+    el.style.transform = `translateZ(${z}px) rotateY(${rotY}deg) rotateX(${rotX}deg) scale(${scale})`;
+
+    heart.appendChild(el);
+
+    return {
+      el,
+      x: parseFloat(el.style.left),
+      y: parseFloat(el.style.top),
+      speed: 0.1 + Math.random() * 0.2
+    };
+  }
+
+  function createFallingHeart() {
+    const el = document.createElement("div");
+    el.className = "heart";
+    el.textContent = "❤";
+
+    el.style.left = Math.random() * 100 + "%";
+    el.style.top = (-Math.random() * 100) + "%";
+
+    const zDepthScale = 800;
+    const z = (Math.random() - 0.5) * 2 * zDepthScale;
+    const rotY = (Math.random() * 60) - 30;
+    const rotX = (Math.random() * 60) - 30;
+    const scale = 1 + Math.random() * 1.5;
+
+    el.style.transform = `translateZ(${z}px) rotateY(${rotY}deg) rotateX(${rotX}deg) scale(${scale})`;
+
+    heart.appendChild(el);
+
+    return {
+      el,
+      x: parseFloat(el.style.left),
+      y: parseFloat(el.style.top),
+      speed: 0.15 + Math.random() * 0.25
+    };
+  }
+
+  for(let i = 0; i < totalTexts; i++) {
+    const text = phrases[i % phrases.length];
+    const item = createFallingText(text);
+    fallingItems.push(item);
+  }
+
+  for(let i = 0; i < totalHearts; i++) {
+    const heartItem = createFallingHeart();
+    fallingItems.push(heartItem);
+  }
+
+  function updatePositions() {
+    fallingItems.forEach(item => {
+      item.y += item.speed;
+
+      if (item.y > 110) {
+        item.y = -10 - Math.random() * 50;
+        item.x = Math.random() * 100;
+        item.el.style.left = item.x + "%";
+      }
+
+      item.el.style.top = item.y + "%";
+    });
+
+    requestAnimationFrame(updatePositions);
+  }
+
+  updatePositions();
+
+  let isDragging = false;
+  let prevX, prevY;
+  let rotateX = -20;
+  let rotateY = 0;
+
+  const scene = document.querySelector(".scene");
+
+  // Mouse events
+  scene.addEventListener("mousedown", (e) => {
+    isDragging = true;
+    prevX = e.clientX;
+    prevY = e.clientY;
+    scene.style.cursor = "grabbing";
+  });
+
+  window.addEventListener("mousemove", (e) => {
+    if (!isDragging) return;
+
+    const dx = e.clientX - prevX;
+    const dy = e.clientY - prevY;
+    prevX = e.clientX;
+    prevY = e.clientY;
+
+    rotateY += dx * 0.3;
+    rotateX += dy * 0.3;
+
+    rotateX = Math.min(Math.max(rotateX, -90), 90);
+
+    heart.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+  });
+
+  window.addEventListener("mouseup", () => {
+    isDragging = false;
+    scene.style.cursor = "grab";
+  });
+
+  // Touch events (cho điện thoại, tablet)
+  scene.addEventListener("touchstart", (e) => {
+    isDragging = true;
+    const touch = e.touches[0];
+    prevX = touch.clientX;
+    prevY = touch.clientY;
+    scene.style.cursor = "grabbing";
+  });
+
+  window.addEventListener("touchmove", (e) => {
+    if (!isDragging) return;
+    const touch = e.touches[0];
+    const dx = touch.clientX - prevX;
+    const dy = touch.clientY - prevY;
+    prevX = touch.clientX;
+    prevY = touch.clientY;
+
+    rotateY += dx * 0.3;
+    rotateX += dy * 0.3;
+    rotateX = Math.min(Math.max(rotateX, -90), 90);
+
+    heart.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+  });
+
+  window.addEventListener("touchend", () => {
+    isDragging = false;
+    scene.style.cursor = "grab";
+  });
+
+  heart.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+</script>
+
+</body>
+</html>
