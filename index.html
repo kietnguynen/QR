@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8" />
-  <title>Chữ 3D Phủ Đầy Màn Hình</title>
+  <title>Chữ 3D Phủ Đầy Màn Hình Có Nhạc</title>
   <style>
     body {
       margin: 0;
@@ -48,6 +48,7 @@
         0 0 20px #5ebaf0,
         0 0 30px #3caaf3,
         0 0 40px #1a9cf2;
+      will-change: transform;
     }
     .falling-text:nth-child(even) {
       color: #c6e7fc;
@@ -69,6 +70,25 @@
         0 0 30px #e03f56;
       will-change: transform;
     }
+    @media (max-width: 768px) {
+  .falling-text {
+    font-size: 36px !important;
+    text-shadow:
+      0 0 8px #a0d8f7,
+      0 0 16px #7fc9f0,
+      0 0 30px #5ebaf0,
+      0 0 40px #3caaf3,
+      0 0 50px #1a9cf2;
+  }
+  .heart {
+    font-size: 48px !important;
+    text-shadow:
+      0 0 15px #ff8a9e,
+      0 0 30px #ff5a70,
+      0 0 45px #e03f56;
+  }
+}
+
   </style>
 </head>
 <body>
@@ -76,6 +96,9 @@
 <div class="scene">
   <div id="heart"></div>
 </div>
+
+<!-- Thêm nhạc nền -->
+<audio id="background-music" src="https://cdn.pixabay.com/download/audio/2021/11/02/audio_abc94e4889.mp3?filename=relaxing-magic-ambience-10866.mp3" autoplay loop></audio>
 
 <script>
   const heart = document.getElementById("heart");
@@ -87,8 +110,8 @@
     ":)"
   ];
 
-  const totalTexts = 40;
-  const totalHearts = 30;
+  const totalTexts = 20;  // Giảm từ 40 xuống 20
+  const totalHearts = 15; // Giảm từ 30 xuống 15
 
   const fallingItems = [];
 
@@ -180,7 +203,24 @@
 
   const scene = document.querySelector(".scene");
 
-  // Mouse events
+  let pendingRotateX = rotateX;
+  let pendingRotateY = rotateY;
+  let needUpdate = false;
+
+  function applyRotation() {
+    if (!needUpdate) return;
+    rotateX = Math.min(Math.max(pendingRotateX, -90), 90);
+    rotateY = pendingRotateY;
+    heart.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+    needUpdate = false;
+  }
+
+  function updateLoop() {
+    applyRotation();
+    requestAnimationFrame(updateLoop);
+  }
+  updateLoop();
+
   scene.addEventListener("mousedown", (e) => {
     isDragging = true;
     prevX = e.clientX;
@@ -196,12 +236,9 @@
     prevX = e.clientX;
     prevY = e.clientY;
 
-    rotateY += dx * 0.3;
-    rotateX += dy * 0.3;
-
-    rotateX = Math.min(Math.max(rotateX, -90), 90);
-
-    heart.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+    pendingRotateY += dx * 0.1;  // Giảm từ 0.3 còn 0.1
+    pendingRotateX += dy * 0.1;
+    needUpdate = true;
   });
 
   window.addEventListener("mouseup", () => {
@@ -226,11 +263,9 @@
     prevX = touch.clientX;
     prevY = touch.clientY;
 
-    rotateY += dx * 0.3;
-    rotateX += dy * 0.3;
-    rotateX = Math.min(Math.max(rotateX, -90), 90);
-
-    heart.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+    pendingRotateY += dx * 0.1;
+    pendingRotateX += dy * 0.1;
+    needUpdate = true;
   });
 
   window.addEventListener("touchend", () => {
@@ -238,6 +273,7 @@
     scene.style.cursor = "grab";
   });
 
+  // Khởi đầu transform
   heart.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
 </script>
 
